@@ -1,53 +1,56 @@
-import { SlashCommandBuilder } from '@discordjs/builders';
-import { Routes } from 'discord-api-types/v9';
-import { REST } from '@discordjs/rest';
 import * as dotenv from 'dotenv';
-import * as discord from 'discord.js'
-
+import * as discord from 'discord.js';
+import * as fs from 'fs';
+import * as path from 'path';
+import { Client, Command } from '../discord';
 
 dotenv.config();
 
-const clientId = process.env.CLIENT_ID;
-const guildId = process.env.GUILD_ID;
+const token = process.env.TOKEN;
 
-const rest = new REST({ version: '9' }).setToken(process.env.TOKEN);
+const client: Client = new discord.Client({
+    intents: [discord.Intents.FLAGS.GUILDS],
+});
 
-const commands = [
-    new SlashCommandBuilder()
-        .setName('ping')
-        .setDescription('Replies with pong!'),
-];
+// Load Commands
 
-(async () => {
-    try {
-        console.log('Started refreshing application slash commands.');
-        await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
-            body: commands,
-        });
-        console.log('Success!');
-    } catch (err) {
-        console.log(err);
-    }
-})();
+const commands = new discord.Collection();
 
+const commandsDir = path.join(process.env.PWD, 'dist', 'src', 'commands');
+const commandFiles = fs.readdirSync(commandsDir);
 
+for (const file of commandFiles) {
+    import(path.join(commandsDir, file))
+        .then((command: Command) => {
+            commands.set(command.data.name, command);
+        })
+        .catch((err) => console.log(err));
+}
 
+client.commands = commands;
 
-// Create a new client instance
-const client = new discord.Client({ intents: [discord.Intents.FLAGS.GUILDS] });
-
-// When the client is ready, run this code (only once)
 client.once('ready', () => {
-	console.log('Ready!');
+    console.log('Ready!');
 });
 
-client.on('interactionCreate', async interaction => {
-	if (!interaction.isCommand()) return;
+// Listen for commands
 
-	if (interaction.commandName === 'ping') {
-		await interaction.reply('Pong!');
+client.on('interactionCreate', async (interaction: discord.Interaction) => {
+    if (!interaction.isCommand()) return;
+
+    const command: Command = client.commands.get(interaction.commandName);
+
+    if (!command) return;
+
+    try {
+        await command.execute(interaction);
+    } catch (error) {
+        console.error(error);
+        await interaction.reply({
+            content: 'There was an error while executing this command!',
+            ephemeral: true,
+        });
     }
 });
 
-// Login to Discord with your client's token
 client.login(process.env.TOKEN);

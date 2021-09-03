@@ -5,8 +5,9 @@
         "noImplicitAny": true,
         "removeComments": true,
         "preserveConstEnums": true,
-        "outDir": "./dist"
+        "sourceMap": false,
+        "outDir": "./dist/src"
     },
-    "include": ["./src/*"],
+    "include": ["./src/**/*"],
     "exclude": ["node_modules"]
 }
