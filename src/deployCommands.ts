@@ -1,6 +1,7 @@
 import { Routes } from 'discord-api-types/v9';
 import { REST } from '@discordjs/rest';
-import { Command } from '../discord';
+import { Command, SlashCommandBuilderJSON } from '../discord';
+import { Permissions } from 'discord.js';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
@@ -14,9 +15,11 @@ const rest = new REST({ version: '9' }).setToken(process.env.TOKEN);
 
 const commandsDir = path.join(process.env.PWD, 'dist', 'src', 'commands');
 
-async function compileCommandList(commandsDir: string): Promise<unknown[]> {
+async function compileCommandList(
+    commandsDir: string
+): Promise<SlashCommandBuilderJSON[]> {
     const commandFiles = fs.readdirSync(commandsDir);
-    const commandList: unknown[] = [];
+    const commandList: SlashCommandBuilderJSON[] = [];
 
     for (const file of commandFiles) {
         await import(path.join(commandsDir, file)).then((command: Command) => {
@@ -26,7 +29,7 @@ async function compileCommandList(commandsDir: string): Promise<unknown[]> {
     return commandList;
 }
 
-async function refreshCommands(commandList: unknown[]) {
+async function refreshCommands(commandList: SlashCommandBuilderJSON[]) {
     try {
         console.log('Started refreshing application slash commands...');
         await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
@@ -38,6 +41,6 @@ async function refreshCommands(commandList: unknown[]) {
     }
 }
 
-compileCommandList(commandsDir).then((commandList: unknown[]) =>
+compileCommandList(commandsDir).then((commandList: SlashCommandBuilderJSON[]) =>
     refreshCommands(commandList)
 );

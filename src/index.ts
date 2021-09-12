@@ -2,19 +2,17 @@ import * as dotenv from 'dotenv';
 import * as discord from 'discord.js';
 import * as fs from 'fs';
 import * as path from 'path';
-import { Client, Command } from '../discord';
+import { Client, Command, Event } from '../discord';
 
 dotenv.config();
 
-const token = process.env.TOKEN;
-
 const client: Client = new discord.Client({
-    intents: [discord.Intents.FLAGS.GUILDS],
+    intents: 641,
 });
 
 // Load Commands
 
-const commands = new discord.Collection();
+client.commands = new discord.Collection();
 
 const commandsDir = path.join(process.env.PWD, 'dist', 'src', 'commands');
 const commandFiles = fs.readdirSync(commandsDir);
@@ -22,16 +20,25 @@ const commandFiles = fs.readdirSync(commandsDir);
 for (const file of commandFiles) {
     import(path.join(commandsDir, file))
         .then((command: Command) => {
-            commands.set(command.data.name, command);
+            client.commands.set(command.data.name, command);
         })
         .catch((err) => console.log(err));
 }
 
-client.commands = commands;
+// Load events
 
-client.once('ready', () => {
-    console.log('Ready!');
-});
+// const eventsDir = path.join(process.env.PWD, 'dist', 'src', 'events');
+// const eventFiles = fs.readdirSync(eventsDir);
+
+// for (const file of eventFiles) {
+//     import(path.join(eventsDir, file)).then((event: Event) => {
+//         if (event.once) {
+//             client.once(event.name, (...args: any[]) => event.execute(...args));
+//         } else {
+//             client.on(event.name, (...args: any[]) => event.execute(...args));
+//         }
+//     });
+// }
 
 // Listen for commands
 
@@ -53,4 +60,7 @@ client.on('interactionCreate', async (interaction: discord.Interaction) => {
     }
 });
 
+client.once('ready', () => {
+    console.log('Bot Online!');
+});
 client.login(process.env.TOKEN);

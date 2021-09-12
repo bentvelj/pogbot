@@ -11,7 +11,7 @@
         "clean": "rm -r ./dist",
         "start": "node ./dist/src/index.js",
         "deployCommands": "node ./dist/src/deployCommands.js",
-        "deploy": "npm run format && npm run lint && npm run recompile && npm run deployCommands && npm run start"
+        "deploy": "npm run format && npm run lint && npm run compile && npm run deployCommands && npm run start"
     },
     "author": "",
     "license": "ISC",

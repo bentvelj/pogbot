@@ -4,12 +4,15 @@ import { Command } from '../../discord';
 
 const slashCommand: SlashCommandBuilder = new SlashCommandBuilder()
     .setName('greet')
-    .setDescription('greetings!');
+    .setDescription('Say hello!');
 
 const execute = async function (
     interaction: discord.CommandInteraction
 ): Promise<void> {
-    interaction.reply('Hello there.');
+    // Obi-wan gif :)
+    interaction.reply(
+        'https://tenor.com/view/hello-there-hi-there-greetings-gif-9442662'
+    );
 };
 
 const command: Command = {
