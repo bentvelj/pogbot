@@ -7,7 +7,7 @@ import { Client, Command, Event } from '../discord';
 dotenv.config();
 
 const client: Client = new discord.Client({
-    intents: 641,
+    intents: [discord.Intents.FLAGS.GUILDS, discord.Intents.FLAGS.GUILD_VOICE_STATES, discord.Intents.FLAGS.GUILD_MESSAGES],
 });
 
 // Load Commands
