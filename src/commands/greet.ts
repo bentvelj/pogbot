@@ -2,7 +2,7 @@ import { SlashCommandBuilder } from '@discordjs/builders';
 import * as discord from 'discord.js';
 import { Command } from '../../discord';
 
-const slashCommand: SlashCommandBuilder = new SlashCommandBuilder()
+const greetCommand: SlashCommandBuilder = new SlashCommandBuilder()
     .setName('greet')
     .setDescription('Say hello!');
 
@@ -16,7 +16,7 @@ const execute = async function (
 };
 
 const command: Command = {
-    data: slashCommand,
+    data: greetCommand,
     execute: execute,
 };
 

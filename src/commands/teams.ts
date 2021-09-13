@@ -14,7 +14,7 @@ const numberOfTeamsOption: SlashCommandIntegerOption =
         .setDescription('The number of teams to make (default is 2).')
         .setRequired(false);
 
-const slashCommand: SlashCommandBuilder = new SlashCommandBuilder()
+const teamsCommand: SlashCommandBuilder = new SlashCommandBuilder()
     .addIntegerOption(numberOfTeamsOption)
     .setName('teams')
     .setDescription('Make some random teams!');
@@ -101,7 +101,7 @@ const execute = async function (
 };
 
 const command: Command = {
-    data: slashCommand,
+    data: teamsCommand,
     execute: execute,
 };
 export = command;
