@@ -9,7 +9,7 @@ const flipCommand: SlashCommandBuilder = new SlashCommandBuilder()
 const execute = async function (
     interaction: discord.CommandInteraction
 ): Promise<void> {
-    interaction.reply(`${Math.random() > 0.5 ? 'Heads!' : 'Tails!'}`);
+    interaction.reply(`${Math.random() > 0.5 ? '**Heads!**' : '**Tails!**'}`);
 };
 
 const command: Command = {
