@@ -12,7 +12,7 @@
         "clean": "rm -r ./dist",
         "start": "node ./dist/src/index.js",
         "deployCommands": "node ./dist/src/deployCommands.js",
-        "postinstall": "npm run compile",
+        "postinstall": "npm run compile && npm run deployCommands",
         "deploy": "npm run format && npm run lint && npm run compile && npm run deployCommands && npm run start"
     },
     "author": "",
