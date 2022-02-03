@@ -9,7 +9,7 @@
         "compile": "tsc",
         "recompile": "npm run clean && npm run compile",
         "clean": "rm -r ./dist",
-        "start": "node ./dist/src/index.js",
+        "start": "npm run compile && node ./dist/src/index.js",
         "deployCommands": "node ./dist/src/deployCommands.js",
         "deploy": "npm run format && npm run lint && npm run compile && npm run deployCommands && npm run start"
     },
