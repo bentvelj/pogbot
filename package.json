@@ -4,6 +4,7 @@
     "description": "A Discord bot for useful gimmicks and fun",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
+        "tsc": "./node_modules/typescript/bin/tsc",
         "lint": "eslint ./src/**/*",
         "format": "prettier --write ./",
         "compile": "tsc",
@@ -11,6 +12,7 @@
         "clean": "rm -r ./dist",
         "start": "npm run compile && node ./dist/src/index.js",
         "deployCommands": "node ./dist/src/deployCommands.js",
+        "postinstall": "npm run compile",
         "deploy": "npm run format && npm run lint && npm run compile && npm run deployCommands && npm run start"
     },
     "author": "",
