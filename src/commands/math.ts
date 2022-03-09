@@ -1,12 +1,15 @@
-import { SlashCommandBuilder, SlashCommandStringOption } from '@discordjs/builders';
+import {
+    SlashCommandBuilder,
+    SlashCommandStringOption,
+} from '@discordjs/builders';
 import * as discord from 'discord.js';
 import { Command } from '../../discord';
-import * as mathjs from 'mathjs'
+import * as mathjs from 'mathjs';
 
 const expressionOption: SlashCommandStringOption =
     new SlashCommandStringOption()
-        .setName("Expression")
-        .setDescription("The mathematical expression to evaluate")
+        .setName('expression')
+        .setDescription('The mathematical expression to evaluate')
         .setRequired(true);
 
 const mathCommand: SlashCommandBuilder = new SlashCommandBuilder()
@@ -21,11 +24,10 @@ const execute = async function (
         (option) => option.name === expressionOption.name
     ).value;
 
-    try{
+    try {
         const result = mathjs.evaluate(expression as mathjs.MathExpression);
         interaction.reply(`\`\`\`${expression} ==\n${result}\`\`\``);
-    }
-    catch(error){
+    } catch (error) {
         interaction.reply(`\`\`\`${error}\`\`\``);
     }
 };

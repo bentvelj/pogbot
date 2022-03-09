@@ -17,7 +17,9 @@ const numPicksOption: SlashCommandIntegerOption =
 const slashCommand: SlashCommandBuilder = new SlashCommandBuilder()
     .addIntegerOption(numPicksOption)
     .setName('pick')
-    .setDescription('Pick a random user (or users) from the current voice channel!');
+    .setDescription(
+        'Pick a random user (or users) from the current voice channel!'
+    );
 
 const execute = async function (
     interaction: discord.CommandInteraction
