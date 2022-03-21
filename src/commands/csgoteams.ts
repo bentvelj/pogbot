@@ -1,5 +1,6 @@
 import * as discord from 'discord.js';
 import * as _ from 'lodash'
+import * as axios from 'axios'
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { Command } from '../../discord';
 import { getVoiceChannel } from '../util/voiceChannel/getVoiceChannel';
@@ -24,15 +25,12 @@ const execute = async function (
     const membersList = getMemberNames(voiceChannel);
 
     //const profileUrls = membersList.map(member => popflashUrls[member]);
-
-    const http = new XMLHttpRequest();
-    const url = 'https://popflash.site/user/42073'
-    http.open('GET',url);
-    http.send();
-    http.onreadystatechange = (e) =>{
-        interaction.reply(http.responseText);
+    axios.default.get('https://popflash.site/user/42073').then(res =>{
+        interaction.reply(res.data);
     }
-
+        
+    )
+    
 };
 
 const command: Command = {

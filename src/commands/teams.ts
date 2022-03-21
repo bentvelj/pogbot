@@ -6,7 +6,7 @@ import * as dotenv from 'dotenv';
 import * as discord from 'discord.js';
 import { Command } from '../../discord';
 import { getVoiceChannel } from '../util/voiceChannel/getVoiceChannel';
-import _ = require('lodash');
+import * as _ from 'lodash'
 import { getMemberNames } from '../util/voiceChannel/getMemberNames';
 
 dotenv.config();
