@@ -23,6 +23,7 @@ async function compileCommandList(
 
     for (const file of commandFiles) {
         await import(path.join(commandsDir, file)).then((command: Command) => {
+            console.log(`Adding ${file}...`);
             commandList.push(command.data.toJSON());
         });
     }

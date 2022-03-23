@@ -3,6 +3,10 @@ import * as discord from 'discord.js';
 import * as fs from 'fs';
 import * as path from 'path';
 import { Client, Command, Event } from '../discord';
+import { connectDB } from './db/mongoConnect';
+
+// Connect to MongoDB
+connectDB();
 
 dotenv.config();
 

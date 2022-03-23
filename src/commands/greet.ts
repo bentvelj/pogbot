@@ -9,7 +9,7 @@ const greetCommand: SlashCommandBuilder = new SlashCommandBuilder()
 const execute = async function (
     interaction: discord.CommandInteraction
 ): Promise<void> {
-    // Obi-wan gif :)
+    //Obi-wan gif :)
     interaction.reply(
         'https://tenor.com/view/hello-there-hi-there-greetings-gif-9442662'
     );

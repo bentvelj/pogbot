@@ -6,7 +6,7 @@ import * as dotenv from 'dotenv';
 import * as discord from 'discord.js';
 import { Command } from '../../discord';
 import { getVoiceChannel } from '../util/voiceChannel/getVoiceChannel';
-import * as _ from 'lodash'
+import * as _ from 'lodash';
 import { getMemberNames } from '../util/voiceChannel/getMemberNames';
 
 dotenv.config();
@@ -90,7 +90,7 @@ const execute = async function (
     for (let team = 0; team < teams.length; team++) {
         let teamString = teams[team].toString().replace(',', ', ').trim();
         if (teamString.endsWith(',')) {
-            teamString = teamString.substr(0, teamString.length - 1);
+            teamString = teamString.substring(0, teamString.length - 1);
         }
         outputString += `**Team ${team + 1} **: \`\`\`${teamString}\`\`\`\n`;
     }

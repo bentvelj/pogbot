@@ -13,7 +13,7 @@
         "start": "node ./dist/src/index.js",
         "deployCommands": "node ./dist/src/deployCommands.js",
         "postinstall": "npm run compile && npm run deployCommands",
-        "deploy": "npm run format && npm run lint && npm run compile && npm run deployCommands && npm run start"
+        "deploy": "npm run format && npm run compile && npm run deployCommands && npm run start"
     },
     "author": "",
     "license": "ISC",
@@ -22,11 +22,13 @@
         "@discordjs/rest": "^0.1.0-canary.0",
         "@discordjs/voice": "^0.6.0",
         "axios": "^0.26.1",
+        "cheerio": "^1.0.0-rc.10",
         "discord-api-types": "^0.22.0",
         "discord.js": "^13.1.0",
         "dotenv": "^10.0.0",
         "lodash": "^4.17.21",
-        "mathjs": "^10.4.0"
+        "mathjs": "^10.4.0",
+        "mongoose": "^6.2.7"
     },
     "devDependencies": {
         "@types/axios": "^0.14.0",
