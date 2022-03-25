@@ -7,7 +7,10 @@ import * as mongoose from 'mongoose';
 import { Command } from '../../discord';
 import { connectDB } from '../db/mongoConnect';
 import { playerSchema as Player } from '../models/playerSchema';
+import { getADR } from '../util/csgoTeamMaking/getADR';
 import { getHLTV } from '../util/csgoTeamMaking/getHLTV';
+import { getHSP } from '../util/csgoTeamMaking/getHSP';
+import { getWR } from '../util/csgoTeamMaking/getWR';
 
 const discordIDOption: SlashCommandStringOption = new SlashCommandStringOption()
     .setName('discord-id')
@@ -37,19 +40,23 @@ const execute = async function (
     ).value as string;
 
     const hltv = await getHLTV(popFlashURL);
-    // Verification
+    const adr = await getADR(popFlashURL);
+    const hsp = await getHSP(popFlashURL);
+    const wr = await getWR(popFlashURL);
+
+    // Verification - Safe to assume if HLTV can be found the others can too.
     if (hltv === undefined) {
         interaction.reply(
-            "There's something wrong with that popFlash URL, could not extract HLTV score."
+            "There's something wrong with that popFlash URL, could not extract HLTV or ADR score."
         );
     } else {
         interaction.reply(
-            `Sucessfully validated ${discID}'s popFlash: ${popFlashURL} (HLTV: ${hltv} - kinda ass ngl)`
+            `Sucessfully validated ${discID}'s popFlash: ${popFlashURL}. Here are their stats from the last 30 days:\n\`\`\`HLTV = ${hltv}\nADR = ${adr}\nHS% = ${hsp}\nWR% = ${wr}\`\`\`\n They should probably download aim trainer, yikes...`
         );
     }
 
     // Also check if it exists in DB?
-    // return;
+    return;
     // Send to DB
     let newPlayer = new Player({ discID, popFlashURL });
 
