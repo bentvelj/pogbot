@@ -1,6 +1,7 @@
 import * as discord from 'discord.js';
 import * as _ from 'lodash';
 import * as mongoose from 'mongoose';
+import { MongoClient as db } from 'mongodb';
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { Command } from '../../discord';
 import { getVoiceChannel } from '../util/voiceChannel/getVoiceChannel';
@@ -25,8 +26,8 @@ const execute = async function (
         return;
     }
 
-    const membersList = getMemberNames(voiceChannel);
-    const tempMembers = [
+    // const membersList = getMemberNames(voiceChannel);
+    const membersList = [
         'Bazzy#3374',
         'Willium#1547',
         'Yelo#2654',
@@ -37,32 +38,26 @@ const execute = async function (
         'pip#9426',
         'LL#4852',
         'Cornpops#0906',
-        'MITTZ#4697',
-        'Chappers#5233',
-        'IamZyva#4533',
-        'Ghostnod#3043',
+        // 'MITTZ#4697',
+        // 'Chappers#5233',
+        // 'IamZyva#4533',
+        // 'Ghostnod#3043',
     ];
     const activePlayers: Player[] = [];
     // Grab each member's popflash info
-    tempMembers.forEach((memberId) => {
-        playerSchema
-            .findOne({ discID: memberId })
-            // Problem not awaiting .exec
-            .exec(async function (err: any, playerObj: any) {
-                if (err) {
-                    console.log('Error while querying member: ' + err);
-                } else {
-                    activePlayers.push({
-                        discId: playerObj.discID,
-                        HLTV: await getHLTV(playerObj.popFlashURL),
-                    });
-                    // console.log(
-                    //     playerObj.discID + ' .... ' + playerObj.popFlashURL
-                    // );
-                    console.log('Successfully queried member: ' + memberId);
-                }
-            });
-    });
+    // console.log(playerSchema.find({ discID: 'Bazzy#3374' }));
+
+    for (const discordId of membersList) {
+        const playerObj = await playerSchema.findOne({
+            discID: discordId,
+        });
+        if (_.isNil(playerObj)) continue;
+        activePlayers.push({
+            discId: playerObj.discID,
+            HLTV: await getHLTV(playerObj.popFlashURL),
+        });
+    }
+
     if (activePlayers.length > 10) {
         interaction.reply(
             'Error: Over 10 users in the voice channel are registered.'
