@@ -20,13 +20,13 @@ async function compileCommandList(
 ): Promise<SlashCommandBuilderJSON[]> {
     const commandFiles = fs.readdirSync(commandsDir);
     const commandList: SlashCommandBuilderJSON[] = [];
-
+    console.log('Compiling commands...');
     for (const file of commandFiles) {
         await import(path.join(commandsDir, file)).then((command: Command) => {
-            console.log(`Adding ${file}...`);
             commandList.push(command.data.toJSON());
         });
     }
+    console.log('Success!');
     return commandList;
 }
 

@@ -35,18 +35,18 @@ for (const file of commandFiles) {
 
 // Load events
 
-// const eventsDir = path.join(process.env.PWD, 'dist', 'src', 'events');
-// const eventFiles = fs.readdirSync(eventsDir);
+const eventsDir = path.join(process.env.PWD, 'dist', 'src', 'events');
+const eventFiles = fs.readdirSync(eventsDir);
 
-// for (const file of eventFiles) {
-//     import(path.join(eventsDir, file)).then((event: Event) => {
-//         if (event.once) {
-//             client.once(event.name, (...args: any[]) => event.execute(...args));
-//         } else {
-//             client.on(event.name, (...args: any[]) => event.execute(...args));
-//         }
-//     });
-// }
+for (const file of eventFiles) {
+    import(path.join(eventsDir, file)).then((event: Event) => {
+        if (event.once) {
+            client.once(event.name, (...args: any[]) => event.execute(...args));
+        } else {
+            client.on(event.name, (...args: any[]) => event.execute(...args));
+        }
+    });
+}
 
 // Listen for commands
 
@@ -68,7 +68,4 @@ client.on('interactionCreate', async (interaction: discord.Interaction) => {
     }
 });
 
-client.once('ready', () => {
-    console.log('Bot Online!');
-});
 client.login(process.env.TOKEN);

@@ -40,5 +40,11 @@ export const getFairTeams = function (playerList: Player[]): TeamPair {
             minAvgDiff = curAvgDiff;
         }
     }
-    return { teamOne, teamTwo, avgHLTVDiff: minAvgDiff };
+    return {
+        teamOne,
+        teamTwo,
+        avgHLTVDiff: minAvgDiff,
+        avgADRDiff: -1,
+        avgWRDiff: -1,
+    };
 };

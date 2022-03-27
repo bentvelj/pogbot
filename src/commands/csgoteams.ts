@@ -1,7 +1,6 @@
 import * as discord from 'discord.js';
 import * as _ from 'lodash';
 import * as mongoose from 'mongoose';
-import { MongoClient as db } from 'mongodb';
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { Command } from '../../discord';
 import { getVoiceChannel } from '../util/voiceChannel/getVoiceChannel';
@@ -12,6 +11,8 @@ import { generateCombinations } from '../util/math/combinations';
 import { getHLTV } from '../util/csgoTeamMaking/getHLTV';
 import { Player } from '../util/csgoTeamMaking/types';
 import { getFairTeams } from '../util/csgoTeamMaking/getFairTeams';
+import { getADR } from '../util/csgoTeamMaking/getADR';
+import { getWR } from '../util/csgoTeamMaking/getWR';
 
 const csgoTeamsCommand: SlashCommandBuilder = new SlashCommandBuilder()
     .setName('csgoteams')
@@ -25,7 +26,6 @@ const execute = async function (
         interaction.reply('You are not in a voice channel...');
         return;
     }
-
     // const membersList = getMemberNames(voiceChannel);
     const membersList = [
         'Bazzy#3374',
@@ -52,9 +52,13 @@ const execute = async function (
             discID: discordId,
         });
         if (_.isNil(playerObj)) continue;
+
+        // Possibly consolidate all of these gets into a single function?
         activePlayers.push({
             discId: playerObj.discID,
             HLTV: await getHLTV(playerObj.popFlashURL),
+            ADR: await getADR(playerObj.popFlashURL),
+            WR: await getWR(playerObj.popFlashURL),
         });
     }
 
@@ -92,16 +96,19 @@ const execute = async function (
     // };
 
     const teamPair = getFairTeams(activePlayers);
+
     let teamOneString = '**Team ONE:**```';
     for (const member of teamPair.teamOne) {
         teamOneString += member.discId + '\n';
     }
     teamOneString += '```\n';
+
     let teamTwoString = '**Team TWO:**```';
     for (const member of teamPair.teamTwo) {
         teamTwoString += member.discId + '\n';
     }
     teamTwoString += '```';
+
     interaction.reply(
         teamOneString +
             teamTwoString +
