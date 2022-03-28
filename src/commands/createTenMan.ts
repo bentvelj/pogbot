@@ -5,6 +5,7 @@ import {
 import * as discord from 'discord.js';
 import { Command } from '../../discord';
 import randomColour from 'randomcolor';
+import { getFairTeamsAsMessage } from '../util/csgoTeamMaking/getFairTeams';
 
 const popFlashLinkOption: SlashCommandStringOption =
     new SlashCommandStringOption()
@@ -27,9 +28,11 @@ const getContent = function (playerList: string[]): string {
     if (playerList.length === 0) {
         return '**The lobby is currently empty!**';
     } else if (playerList.length > 0 && playerList.length < 10) {
-        return `**Current players: ${playerList
+        return `Current players: **${playerList
             .toString()
-            .replace('[]', '')}**`;
+            .replace('[]', '')
+            .split(',')
+            .join(', ')}**`;
     } else {
         return `**Lobby is currently full!**`;
     }
@@ -62,7 +65,8 @@ const execute = async function (
     const leaveButton = new discord.MessageButton()
         .setCustomId('leave')
         .setLabel('💨')
-        .setStyle('DANGER');
+        .setStyle('DANGER')
+        .setDisabled(true);
 
     // Add them to the message
     const row = new discord.MessageActionRow().addComponents(
@@ -81,23 +85,25 @@ const execute = async function (
         'collect',
         async (i: discord.MessageComponentInteraction) => {
             const user = i.member.user.username;
-            if (playerList.length == 10) {
-                await interaction.followUp({
-                    content:
-                        'Lobby is unfortunately full, maybe convince someone to leave?',
-                    ephemeral: true,
-                });
-            } else if (!playerList.includes(user)) {
+            if (!playerList.includes(user) && playerList.length < 10) {
                 playerList.push(user);
-                await i.update({
-                    content: getContent(playerList),
-                });
-            } else {
-                await interaction.followUp({
-                    content: "You can't join a lobby you're already in.",
-                    ephemeral: true,
-                });
+
+                // Leave button will always be enabled after a join
+                row.components[1].setDisabled(false);
+
+                // If full, disable join button
+                if (playerList.length > 9) {
+                    row.components[0].setDisabled(true);
+                    await i.update({
+                        content: await getFairTeamsAsMessage(playerList),
+                        components: [row],
+                    });
+                }
             }
+            await i.update({
+                content: getContent(playerList),
+                components: [row],
+            });
         }
     );
 
@@ -112,15 +118,19 @@ const execute = async function (
             const user = i.member.user.username;
             if (playerList.includes(user)) {
                 playerList = playerList.filter((u) => u !== user);
-                await i.update({
-                    content: getContent(playerList),
-                });
-            } else {
-                await interaction.followUp({
-                    content: "You can't leave a lobby you never joined.",
-                    ephemeral: true,
-                });
+
+                // Join button will always be enabled after a leave
+                row.components[0].setDisabled(false);
+
+                // If empty, disable leave button
+                if (playerList.length == 0) {
+                    row.components[1].setDisabled(true);
+                }
             }
+            await i.update({
+                content: getContent(playerList),
+                components: [row],
+            });
         }
     );
 

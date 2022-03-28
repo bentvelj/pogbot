@@ -1,5 +1,30 @@
+import * as _ from 'lodash'
 import { Player, TeamPair } from './types';
+import { playerSchema } from '../../models/playerSchema';
 import { generateCombinations } from '../math/combinations';
+import { getHLTV } from './getHLTV';
+import { getADR } from './getADR';
+import { getWR } from './getWR';
+
+const pullPlayerInfo = async function(usernames : string[]) : Promise<Player[]>{
+    const playerList : Player[] = [];
+    
+    for (const discordId of usernames) {
+        const playerObj = await playerSchema.findOne({
+            discID: discordId,
+        });
+        if (_.isNil(playerObj)) continue;
+
+        // Possibly consolidate all of these gets into a single function?
+        playerList.push({
+            discId: playerObj.discID,
+            HLTV: await getHLTV(playerObj.popFlashURL),
+            ADR: await getADR(playerObj.popFlashURL),
+            WR: await getWR(playerObj.popFlashURL),
+        });
+    }
+    return playerList;
+}
 
 const getComplement = function (combination: Player[], playerList: Player[]) {
     let complement: Player[] = [];
@@ -25,6 +50,7 @@ const getAvgHLTV = function (combination: Player[]) {
 };
 
 export const getFairTeams = function (playerList: Player[]): TeamPair {
+    
     const combinations = generateCombinations(playerList, 5);
 
     let minAvgDiff = Infinity;
@@ -47,4 +73,24 @@ export const getFairTeams = function (playerList: Player[]): TeamPair {
         avgADRDiff: -1,
         avgWRDiff: -1,
     };
+};
+
+export const getFairTeamsAsMessage = async function (usernames: string[]): Promise<string> {
+    const playerList = await pullPlayerInfo(usernames);
+    const teamPair = getFairTeams(playerList);
+
+    
+    let teamOneString = '**Team ONE:**```';
+    for (const member of teamPair.teamOne) {
+        teamOneString += member.discId + '\n';
+    }
+    teamOneString += '```\n';
+
+    let teamTwoString = '**Team TWO:**```';
+    for (const member of teamPair.teamTwo) {
+        teamTwoString += member.discId + '\n';
+    }
+    teamTwoString += '```\n';
+
+    return teamOneString + teamTwoString + `Difference in average ADR is: ${teamPair.avgADRDiff}\n`;
 };
