@@ -51,17 +51,18 @@ const execute = async function (
         );
     } else {
         interaction.reply(
-            `Sucessfully validated ${discID}'s popFlash: ${popFlashURL}. Here are their stats from the last 30 days:\n\`\`\`HLTV = ${hltv}\nADR = ${adr}\nHS% = ${hsp}\nWR% = ${wr}\`\`\`\n They should probably download aim trainer, yikes...`
+            `Sucessfully validated ${discID}'s popFlash: ${popFlashURL}. Here are their stats from the last 31 days:\n\`\`\`HLTV = ${hltv}\nADR = ${adr}\nHS% = ${hsp}\nWR% = ${wr}\`\`\`\n They should probably download aim trainer, yikes...`
         );
     }
 
     // Also check if it exists in DB?
-    return;
     // Send to DB
     let newPlayer = new Player({ discID, popFlashURL });
 
     newPlayer.save(function (err: any, book: any) {
-        if (err) return console.error(err);
+        if (err){
+            return console.error(err);
+        } 
         console.log(newPlayer.discID + ' saved to bookstore collection.');
     });
 };

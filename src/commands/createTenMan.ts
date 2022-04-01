@@ -5,7 +5,8 @@ import {
 import * as discord from 'discord.js';
 import { Command } from '../../discord';
 import randomColour from 'randomcolor';
-import { getFairTeamsAsMessage } from '../util/csgoTeamMaking/getFairTeams';
+import { getFairTeamsAsMessage, validatePlayerList } from '../util/csgoTeamMaking/getFairTeams';
+import _ from 'lodash';
 
 const popFlashLinkOption: SlashCommandStringOption =
     new SlashCommandStringOption()
@@ -37,6 +38,11 @@ const getContent = function (playerList: string[]): string {
         return `**Lobby is currently full!**`;
     }
 };
+
+const getMissingPlayerListMessage = function(missingPlayers: string[]) : string{
+    const listString = missingPlayers.toString().replace('[]','').split(',').join(',');
+    return `The following users could not be found in the database: ${listString}\n\n Add them with the \`\\add-csgo-player\` command.`;
+}
 
 const execute = async function (
     interaction: discord.CommandInteraction
@@ -94,10 +100,20 @@ const execute = async function (
                 // If full, disable join button
                 if (playerList.length > 9) {
                     row.components[0].setDisabled(true);
-                    await i.update({
-                        content: await getFairTeamsAsMessage(playerList),
-                        components: [row],
-                    });
+                    // Check to ensure all players exist in DB
+                    const notFoundList = await validatePlayerList(playerList);
+                    if(_.isEmpty(notFoundList)){
+                        await i.update({
+                            content: await getFairTeamsAsMessage(playerList),
+                            components: [row],
+                        });
+                    }else{
+                        await i.update({
+                            content: getMissingPlayerListMessage(notFoundList),
+                            components: [row]
+                        })
+                    }
+
                 }
             }
             await i.update({

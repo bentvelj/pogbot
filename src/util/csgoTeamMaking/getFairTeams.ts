@@ -6,14 +6,36 @@ import { getHLTV } from './getHLTV';
 import { getADR } from './getADR';
 import { getWR } from './getWR';
 
+/**
+ * Checks a list of discord usernames against the database and returns a list of users NOT found in the database
+ * @param usernames The list of usernames to validate
+ * @returns A list of users NOT found in the database
+ */
+
+export const validatePlayerList = async function(usernames : string[]) : Promise<string[]>{
+    const notFoundList : string[] = []
+    for(const discordID of usernames){
+        const result = await playerSchema.findOne({
+            discID: discordID,
+        });
+        if(_.isNil(result)){
+            notFoundList.push(discordID);
+        }
+    }
+    return notFoundList;
+}
+
 const pullPlayerInfo = async function(usernames : string[]) : Promise<Player[]>{
     const playerList : Player[] = [];
     
-    for (const discordId of usernames) {
+    for (const discordID of usernames) {
         const playerObj = await playerSchema.findOne({
-            discID: discordId,
+            discID: discordID,
         });
-        if (_.isNil(playerObj)) continue;
+
+        if (_.isNil(playerObj)){
+            throw `Attempted to pull player info of ${discordID}, but they were not found in the database.`;
+        }
 
         // Possibly consolidate all of these gets into a single function?
         playerList.push({
