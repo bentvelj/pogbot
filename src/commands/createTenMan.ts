@@ -70,7 +70,7 @@ const execute = async function (
 
     const leaveButton = new discord.MessageButton()
         .setCustomId('leave')
-        .setLabel('💨')
+        .setLabel('✌️')
         .setStyle('DANGER')
         .setDisabled(true);
 
