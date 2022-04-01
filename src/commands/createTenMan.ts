@@ -5,8 +5,12 @@ import {
 import * as discord from 'discord.js';
 import { Command } from '../../discord';
 import randomColour from 'randomcolor';
-import { getFairTeamsAsMessage, validatePlayerList } from '../util/csgoTeamMaking/getFairTeams';
+import {
+    getFairTeamsAsMessage,
+    validatePlayerList,
+} from '../util/csgoTeamMaking/getFairTeams';
 import _ from 'lodash';
+import { v4 as uuidv4 } from 'uuid';
 
 const popFlashLinkOption: SlashCommandStringOption =
     new SlashCommandStringOption()
@@ -27,7 +31,7 @@ const createTenMan: SlashCommandBuilder = new SlashCommandBuilder()
 
 const getContent = function (playerList: string[]): string {
     if (playerList.length === 0) {
-        return '**The lobby is currently empty!**';
+        return 'The lobby is currently **empty**!';
     } else if (playerList.length > 0 && playerList.length < 10) {
         return `Current players: **${playerList
             .toString()
@@ -35,14 +39,23 @@ const getContent = function (playerList: string[]): string {
             .split(',')
             .join(', ')}**`;
     } else {
-        return `**Lobby is currently full!**`;
+        return `Lobby is currently **full**!`;
     }
 };
 
-const getMissingPlayerListMessage = function(missingPlayers: string[]) : string{
-    const listString = missingPlayers.toString().replace('[]','').split(',').join(',');
+const getMissingPlayerListMessage = function (
+    missingPlayers: string[]
+): string {
+    const listString = missingPlayers
+        .toString()
+        .replace('[]', '')
+        .split(',')
+        .join(',');
     return `The following users could not be found in the database: ${listString}\n\n Add them with the \`\\add-csgo-player\` command.`;
-}
+};
+
+// In seconds, currently at 1 hour.
+const LOBBY_TIMEOUT = 60 * 60 * 1000;
 
 const execute = async function (
     interaction: discord.CommandInteraction
@@ -62,14 +75,20 @@ const execute = async function (
         .setDescription('This is a popFlash link, obviously.')
         .setURL(popFlashLink);
 
+    // These UUIDs are to prevent two lobbies from listening (and replying to) each others interactions (button presses)
+
+    const joinButtonUUID = uuidv4();
+
+    const leaveButtonUUID = uuidv4();
+
     // Create buttons
     const joinButton = new discord.MessageButton()
-        .setCustomId('join')
+        .setCustomId(joinButtonUUID)
         .setLabel('🍆')
         .setStyle('SUCCESS');
 
     const leaveButton = new discord.MessageButton()
-        .setCustomId('leave')
+        .setCustomId(leaveButtonUUID)
         .setLabel('✌️')
         .setStyle('DANGER')
         .setDisabled(true);
@@ -84,7 +103,7 @@ const execute = async function (
 
     const joinCollector = interaction.channel.createMessageComponentCollector({
         filter: (i: discord.MessageComponentInteraction) =>
-            i.customId === 'join',
+            i.customId === joinButtonUUID,
     });
 
     joinCollector.on(
@@ -102,18 +121,17 @@ const execute = async function (
                     row.components[0].setDisabled(true);
                     // Check to ensure all players exist in DB
                     const notFoundList = await validatePlayerList(playerList);
-                    if(_.isEmpty(notFoundList)){
+                    if (_.isEmpty(notFoundList)) {
                         await i.update({
                             content: await getFairTeamsAsMessage(playerList),
                             components: [row],
                         });
-                    }else{
+                    } else {
                         await i.update({
                             content: getMissingPlayerListMessage(notFoundList),
-                            components: [row]
-                        })
+                            components: [row],
+                        });
                     }
-
                 }
             }
             await i.update({
@@ -125,7 +143,7 @@ const execute = async function (
 
     const leaveCollector = interaction.channel.createMessageComponentCollector({
         filter: (i: discord.MessageComponentInteraction) =>
-            i.customId == 'leave',
+            i.customId == leaveButtonUUID,
     });
 
     leaveCollector.on(
@@ -151,10 +169,19 @@ const execute = async function (
     );
 
     await interaction.reply({
-        content: '**Lobby is currently empty!**',
+        content: 'Lobby is currently **empty**!',
         components: [row],
         embeds: [popFlashLinkEmbed],
     });
+
+    await setTimeout(async () => {
+        joinCollector.removeAllListeners();
+        joinCollector.dispose(interaction);
+        leaveCollector.removeAllListeners();
+        leaveCollector.dispose(interaction);
+        await interaction.deleteReply();
+        console.log('Lobby timed out.');
+    }, LOBBY_TIMEOUT);
 };
 
 const command: Command = {

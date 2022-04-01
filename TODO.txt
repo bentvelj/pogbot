@@ -1,5 +1,3 @@
-ideas
-//
-- dm blast command with invites to players (can include custom msg)
-- potentially, instead of grabbing memberlist from voice channel members, grab it based on reactions to some post by bot (either in DM or text channel)
+- dm blast? Probably just a server @ is fine
 - handle edge cases for registration (e.g. wrong popflash link for a given discord ID)
+- What happens if someone has a popflash account but hasnt played a popflash before?? IE missing data

@@ -60,9 +60,9 @@ const execute = async function (
     let newPlayer = new Player({ discID, popFlashURL });
 
     newPlayer.save(function (err: any, book: any) {
-        if (err){
+        if (err) {
             return console.error(err);
-        } 
+        }
         console.log(newPlayer.discID + ' saved to bookstore collection.');
     });
 };

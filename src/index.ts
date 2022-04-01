@@ -59,10 +59,10 @@ client.on('interactionCreate', async (interaction: discord.Interaction) => {
 
     try {
         await command.execute(interaction);
-    } catch (error) {
+    } catch (error: any) {
         console.error(error);
         await interaction.reply({
-            content: 'There was an error while executing this command!',
+            content: `The command failed! Here's discord's complaint:\n\`\`\`${error.toString()}\`\`\`Hopefully you understand that, and can do better next time.`,
             ephemeral: true,
         });
     }
