@@ -33,7 +33,8 @@ const getContent = function (playerList: string[]): string {
     if (playerList.length === 0) {
         return 'The lobby is currently **empty**!';
     } else if (playerList.length > 0 && playerList.length < 10) {
-        return `Current players: **${playerList
+        return `Current players [ **${playerList.length}** ]: **${playerList
+            .map((p) => p.substring(0, p.indexOf('#')))
             .toString()
             .replace('[]', '')
             .split(',')
@@ -46,12 +47,12 @@ const getContent = function (playerList: string[]): string {
 const getMissingPlayerListMessage = function (
     missingPlayers: string[]
 ): string {
-    const listString = missingPlayers
+    const listString = `**${missingPlayers
         .toString()
         .replace('[]', '')
         .split(',')
-        .join(',');
-    return `The following users could not be found in the database: ${listString}\n\n Add them with the \`\\add-csgo-player\` command.`;
+        .join(', ')}**`;
+    return `The following users could not be found in the database: ${listString}\n\n Add them with the \`\\add-csgo-player\` command, then re-join the lobby.`;
 };
 
 // In seconds, currently at 1 hour.
@@ -109,7 +110,9 @@ const execute = async function (
     joinCollector.on(
         'collect',
         async (i: discord.MessageComponentInteraction) => {
-            const user = i.member.user.username;
+            const user =
+                i.member.user.username + '#' + i.member.user.discriminator;
+
             if (!playerList.includes(user) && playerList.length < 10) {
                 playerList.push(user);
 
@@ -122,8 +125,15 @@ const execute = async function (
                     // Check to ensure all players exist in DB
                     const notFoundList = await validatePlayerList(playerList);
                     if (_.isEmpty(notFoundList)) {
+                        row.components[1].setDisabled(true);
                         await i.update({
-                            content: await getFairTeamsAsMessage(playerList),
+                            content: 'Computing teams...',
+                            components: [row],
+                        });
+                        const result = await getFairTeamsAsMessage(playerList);
+                        row.components[1].setDisabled(false);
+                        await i.editReply({
+                            content: result,
                             components: [row],
                         });
                     } else {
@@ -132,6 +142,7 @@ const execute = async function (
                             components: [row],
                         });
                     }
+                    return;
                 }
             }
             await i.update({
@@ -149,7 +160,8 @@ const execute = async function (
     leaveCollector.on(
         'collect',
         async (i: discord.MessageComponentInteraction) => {
-            const user = i.member.user.username;
+            const user =
+                i.member.user.username + '#' + i.member.user.discriminator;
             if (playerList.includes(user)) {
                 playerList = playerList.filter((u) => u !== user);
 

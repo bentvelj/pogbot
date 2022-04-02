@@ -9,7 +9,7 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 const clientId = process.env.CLIENT_ID;
-const guildId = process.env.GUILD_ID;
+const guildId = process.env.ALT_GUILD_ID;
 
 const rest = new REST({ version: '9' }).setToken(process.env.TOKEN);
 

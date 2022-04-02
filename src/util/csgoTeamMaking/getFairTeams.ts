@@ -2,9 +2,7 @@ import * as _ from 'lodash';
 import { Player, TeamPair } from './types';
 import { playerSchema } from '../../models/playerSchema';
 import { generateCombinations } from '../math/combinations';
-import { getHLTV } from './getHLTV';
-import { getADR } from './getADR';
-import { getWR } from './getWR';
+import { getPlayerStats } from './getPlayerStats';
 
 /**
  * Checks a list of discord usernames against the database and returns a list of users NOT found in the database
@@ -27,27 +25,23 @@ export const validatePlayerList = async function (
     return notFoundList;
 };
 
-const pullPlayerInfo = async function (usernames: string[]): Promise<Player[]> {
-    const playerList: Player[] = [];
-
-    for (const discordID of usernames) {
-        const playerObj = await playerSchema.findOne({
-            discID: discordID,
-        });
-
-        if (_.isNil(playerObj)) {
-            throw `Attempted to pull player info of ${discordID}, but they were not found in the database.`;
-        }
-
-        // Possibly consolidate all of these gets into a single function?
-        playerList.push({
-            discId: playerObj.discID,
-            HLTV: await getHLTV(playerObj.popFlashURL),
-            ADR: await getADR(playerObj.popFlashURL),
-            WR: await getWR(playerObj.popFlashURL),
-        });
+const resolvePlayer = async function (username: string): Promise<Player> {
+    const playerObj = await playerSchema.findOne({
+        discID: username,
+    });
+    if (_.isNil(playerObj)) {
+        return Promise.reject(
+            `Attempted to pull player info of ${username}, but they were not found in the database.`
+        );
     }
-    return playerList;
+    const stats = await getPlayerStats(playerObj.popFlashURL);
+    return {
+        discId: playerObj.discID,
+        HLTV: stats.HLTV,
+        ADR: stats.ADR,
+        WR: stats.WR,
+        HSP: stats.HSP,
+    };
 };
 
 const getComplement = function (combination: Player[], playerList: Player[]) {
@@ -95,15 +89,34 @@ export const getFairTeams = function (playerList: Player[]): TeamPair {
         avgHLTVDiff: minAvgDiff,
         avgADRDiff: -1,
         avgWRDiff: -1,
+        avgHSPDiff: -1,
     };
 };
 
 export const getFairTeamsAsMessage = async function (
     usernames: string[]
 ): Promise<string> {
-    const playerList = await pullPlayerInfo(usernames);
+    // usernames = [
+    //     'Bazzy#3374',
+    //     //'Willium#1547',
+    //     'Yelo#2654',
+    //     'Boxerme#0774',
+    //     //'Lambertkwp#7057',
+    //     'Trevor#2842',
+    //     //'flasdo#1417',
+    //     'pip#9426',
+    //     'LL#4852',
+    //     //'Cornpops#0906',
+    //     'MITTZ#4697',
+    //     'Chappers#5233',
+    //     'IamZyva#4533',
+    //     'Ghostnod#3043',
+    // ];
+    const playerList = await Promise.all(
+        usernames.map((username) => resolvePlayer(username))
+    );
     const teamPair = getFairTeams(playerList);
-
+    console.log(teamPair);
     let teamOneString = '**Team ONE:**```';
     for (const member of teamPair.teamOne) {
         teamOneString += member.discId + '\n';
@@ -115,10 +128,9 @@ export const getFairTeamsAsMessage = async function (
         teamTwoString += member.discId + '\n';
     }
     teamTwoString += '```\n';
-
     return (
         teamOneString +
         teamTwoString +
-        `Difference in average HLTV is: ${teamPair.avgHLTVDiff}\n`
+        `Difference in average HLTV is: ${teamPair.avgHLTVDiff.toFixed(2)}\n`
     );
 };

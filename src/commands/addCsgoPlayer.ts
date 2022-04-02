@@ -8,9 +8,7 @@ import { Command } from '../../discord';
 import { connectDB } from '../db/mongoConnect';
 import { playerSchema as Player } from '../models/playerSchema';
 import { getADR } from '../util/csgoTeamMaking/getADR';
-import { getHLTV } from '../util/csgoTeamMaking/getHLTV';
-import { getHSP } from '../util/csgoTeamMaking/getHSP';
-import { getWR } from '../util/csgoTeamMaking/getWR';
+import { getPlayerStats } from '../util/csgoTeamMaking/getPlayerStats';
 
 const discordIDOption: SlashCommandStringOption = new SlashCommandStringOption()
     .setName('discord-id')
@@ -39,19 +37,16 @@ const execute = async function (
         (option) => option.name === popFlashOption.name
     ).value as string;
 
-    const hltv = await getHLTV(popFlashURL);
-    const adr = await getADR(popFlashURL);
-    const hsp = await getHSP(popFlashURL);
-    const wr = await getWR(popFlashURL);
+    const stats = await getPlayerStats(popFlashURL);
 
     // Verification - Safe to assume if HLTV can be found the others can too.
-    if (hltv === undefined) {
+    if (stats.HLTV === undefined) {
         interaction.reply(
             "There's something wrong with that popFlash URL, could not extract HLTV or ADR score."
         );
     } else {
         interaction.reply(
-            `Sucessfully validated ${discID}'s popFlash: ${popFlashURL}. Here are their stats from the last 31 days:\n\`\`\`HLTV = ${hltv}\nADR = ${adr}\nHS% = ${hsp}\nWR% = ${wr}\`\`\`\n They should probably download aim trainer, yikes...`
+            `Sucessfully validated ${discID}'s popFlash: ${popFlashURL}. Here are their stats from the last 31 days:\n\`\`\`HLTV = ${stats.HLTV}\nADR = ${stats.ADR}\nHS% = ${stats.WR}\nWR% = ${stats.WR}\`\`\`\n They should probably download aim trainer, yikes...`
         );
     }
 
