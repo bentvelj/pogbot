@@ -119,13 +119,13 @@ export const getFairTeamsAsMessage = async function (
     console.log(teamPair);
     let teamOneString = '**Team ONE:**```';
     for (const member of teamPair.teamOne) {
-        teamOneString += member.discId + '\n';
+        teamOneString += member.discId.substring(0,member.discId.indexOf('#')) + '\n';
     }
     teamOneString += '```\n';
 
     let teamTwoString = '**Team TWO:**```';
     for (const member of teamPair.teamTwo) {
-        teamTwoString += member.discId + '\n';
+        teamTwoString += member.discId.substring(0,member.discId.indexOf('#')) + '\n';
     }
     teamTwoString += '```\n';
     return (
