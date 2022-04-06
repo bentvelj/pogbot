@@ -61,41 +61,71 @@ const getComplement = function (combination: Player[], playerList: Player[]) {
 };
 
 const getAvgHLTV = function (combination: Player[]) {
-    // cum is short for cumulative you bastard
+    // cum is short for cumulative 💦
     return combination.reduce((cum, p) => {
         return cum + p.HLTV / combination.length;
     }, 0);
 };
 
-export const getFairTeams = function (playerList: Player[]): TeamPair {
+export const getFairTeamsList = function (playerList: Player[]): TeamPair[] {
     const combinations = generateCombinations(playerList, 5);
 
-    let minAvgDiff = Infinity;
-    let teamOne = undefined;
-    let teamTwo = undefined;
+    combinations.sort((combo1, combo2) => {
+        const complement1 = getComplement(combo1, playerList);
+        const complement2 = getComplement(combo2, playerList);
 
+        const diff1 = Math.abs(getAvgHLTV(combo1) - getAvgHLTV(complement1));
+        const diff2 = Math.abs(getAvgHLTV(combo2) - getAvgHLTV(complement2));
+
+        return diff1 - diff2;
+    });
+
+    const teamPairList: TeamPair[] = [];
     for (const combo of combinations) {
-        const complement = getComplement(combo, playerList);
-        let curAvgDiff = Math.abs(getAvgHLTV(combo) - getAvgHLTV(complement));
-        if (curAvgDiff < minAvgDiff) {
-            teamOne = combo;
-            teamTwo = complement;
-            minAvgDiff = curAvgDiff;
-        }
+        const teamOne = combo;
+        const teamTwo = getComplement(combo, playerList);
+        const avgHLTVDiff = Math.abs(getAvgHLTV(teamOne) - getAvgHLTV(teamTwo));
+
+        const teamPair: TeamPair = {
+            teamOne,
+            teamTwo,
+            avgHLTVDiff,
+            avgADRDiff: -1,
+            avgHSPDiff: -1,
+            avgWRDiff: -1,
+        };
+        teamPairList.push(teamPair);
     }
-    return {
-        teamOne,
-        teamTwo,
-        avgHLTVDiff: minAvgDiff,
-        avgADRDiff: -1,
-        avgWRDiff: -1,
-        avgHSPDiff: -1,
-    };
+    // console.log(teamPairList);
+    return teamPairList;
 };
 
-export const getFairTeamsAsMessage = async function (
+const stringifyTeamPair = function (teamPair: TeamPair): string {
+    let teamOneString = '**Team ONE:**```\n';
+    for (const member of teamPair.teamOne) {
+        teamOneString +=
+            member.discId.substring(0, member.discId.indexOf('#')) + '\n';
+    }
+    teamOneString += '```\n';
+    let teamTwoString = '**Team TWO:**```\n';
+    for (const member of teamPair.teamTwo) {
+        teamTwoString +=
+            member.discId.substring(0, member.discId.indexOf('#')) + '\n';
+    }
+    teamTwoString += '```\n';
+    return (
+        teamOneString +
+        teamTwoString +
+        `Difference in average HLTV is: \`${teamPair.avgHLTVDiff.toFixed(
+            2
+        )}\`\n`
+    );
+};
+
+export const getFairTeamsListAsMessage = async function (
     usernames: string[]
-): Promise<string> {
+): Promise<string[]> {
+    // Sample  used for testing
     // usernames = [
     //     'Bazzy#3374',
     //     //'Willium#1547',
@@ -115,22 +145,8 @@ export const getFairTeamsAsMessage = async function (
     const playerList = await Promise.all(
         usernames.map((username) => resolvePlayer(username))
     );
-    const teamPair = getFairTeams(playerList);
-    console.log(teamPair);
-    let teamOneString = '**Team ONE:**```';
-    for (const member of teamPair.teamOne) {
-        teamOneString += member.discId.substring(0,member.discId.indexOf('#')) + '\n';
-    }
-    teamOneString += '```\n';
-
-    let teamTwoString = '**Team TWO:**```';
-    for (const member of teamPair.teamTwo) {
-        teamTwoString += member.discId.substring(0,member.discId.indexOf('#')) + '\n';
-    }
-    teamTwoString += '```\n';
-    return (
-        teamOneString +
-        teamTwoString +
-        `Difference in average HLTV is: ${teamPair.avgHLTVDiff.toFixed(2)}\n`
+    const stringList: string[] = getFairTeamsList(playerList).map(
+        (tp: TeamPair) => stringifyTeamPair(tp)
     );
+    return stringList;
 };

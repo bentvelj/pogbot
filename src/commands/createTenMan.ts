@@ -6,11 +6,12 @@ import * as discord from 'discord.js';
 import { Command } from '../../discord';
 import randomColour from 'randomcolor';
 import {
-    getFairTeamsAsMessage,
+    getFairTeamsListAsMessage,
     validatePlayerList,
 } from '../util/csgoTeamMaking/getFairTeams';
 import _ from 'lodash';
 import { v4 as uuidv4 } from 'uuid';
+import { e } from 'mathjs';
 
 const popFlashLinkOption: SlashCommandStringOption =
     new SlashCommandStringOption()
@@ -82,6 +83,10 @@ const execute = async function (
 
     const leaveButtonUUID = uuidv4();
 
+    const prevTeamButtonUUID = uuidv4();
+
+    const nextTeamButtonUUID = uuidv4();
+
     // Create buttons
     const joinButton = new discord.MessageButton()
         .setCustomId(joinButtonUUID)
@@ -94,13 +99,24 @@ const execute = async function (
         .setStyle('DANGER')
         .setDisabled(true);
 
-    // Add them to the message
-    const row = new discord.MessageActionRow().addComponents(
-        joinButton,
-        leaveButton
-    );
+    const prevTeamButton = new discord.MessageButton()
+        .setCustomId(prevTeamButtonUUID)
+        .setLabel('⬅️')
+        .setStyle('SECONDARY');
 
+    const nextTeamButton = new discord.MessageButton()
+        .setCustomId(nextTeamButtonUUID)
+        .setLabel('➡️')
+        .setStyle('PRIMARY');
+
+    // Player list : who is currently in the lobby : )
     let playerList: string[] = [];
+
+    // Current set of possible teams generated from (the last full) lobby members. : )
+    let currentTeamsList: string[];
+
+    //current team being displayed in the lobby
+    let currentTeamsIndex = 0;
 
     const joinCollector = interaction.channel.createMessageComponentCollector({
         filter: (i: discord.MessageComponentInteraction) =>
@@ -117,44 +133,75 @@ const execute = async function (
                 playerList.push(user);
 
                 // Leave button will always be enabled after a join
-                row.components[1].setDisabled(false);
+                leaveButton.setDisabled(false);
 
-                // If full, disable join button
                 if (playerList.length > 9) {
-                    row.components[0].setDisabled(true);
+                    // If full, disable join button
+                    joinButton.setDisabled(true);
                     // Check to ensure all players exist in DB
                     const notFoundList = await validatePlayerList(playerList);
                     if (_.isEmpty(notFoundList)) {
-                        row.components[1].setDisabled(true);
+                        // While computing 💻 teams, disable the leave button so people dont leave mid computation 💻
+                        leaveButton.setDisabled(true);
                         await i.update({
                             content: 'Computing teams...',
-                            components: [row],
+                            components: [
+                                new discord.MessageActionRow().addComponents(
+                                    joinButton,
+                                    leaveButton
+                                ),
+                            ],
                         });
-                        const result = await getFairTeamsAsMessage(playerList);
-                        row.components[1].setDisabled(false);
+                        currentTeamsList = await getFairTeamsListAsMessage(
+                            playerList
+                        );
+                        // Computation 💻 done, teams are displayed, people are free to leave.
+                        leaveButton.setDisabled(false);
                         await i.editReply({
-                            content: result,
-                            components: [row],
+                            content: currentTeamsList[0],
+                            // Include the cycle 🌀 buttons while displaying teams
+                            components: [
+                                new discord.MessageActionRow().addComponents(
+                                    joinButton,
+                                    leaveButton,
+                                    prevTeamButton,
+                                    nextTeamButton
+                                ),
+                            ],
                         });
                     } else {
                         await i.update({
                             content: getMissingPlayerListMessage(notFoundList),
-                            components: [row],
+                            components: [
+                                new discord.MessageActionRow().addComponents(
+                                    joinButton,
+                                    leaveButton
+                                ),
+                            ],
                         });
                     }
-                    return;
+                } else {
+                    // Player successfully joined lobby, but it's still not full 🌗
+                    await i.update({
+                        content: getContent(playerList),
+                        components: [
+                            new discord.MessageActionRow().addComponents(
+                                joinButton,
+                                leaveButton
+                            ),
+                        ],
+                    });
                 }
+            } else {
+                // In the case 💼 of trying to join a full lobby, or a lobby you're already in - do nothing
+                await i.deferUpdate();
             }
-            await i.update({
-                content: getContent(playerList),
-                components: [row],
-            });
         }
     );
 
     const leaveCollector = interaction.channel.createMessageComponentCollector({
         filter: (i: discord.MessageComponentInteraction) =>
-            i.customId == leaveButtonUUID,
+            i.customId === leaveButtonUUID,
     });
 
     leaveCollector.on(
@@ -166,27 +213,85 @@ const execute = async function (
                 playerList = playerList.filter((u) => u !== user);
 
                 // Join button will always be enabled after a leave
-                row.components[0].setDisabled(false);
+                joinButton.setDisabled(false);
 
-                // If empty, disable leave button
+                // Reset the current team index, so that next time the lobby is full, it shows the top team pair first 💯
+                currentTeamsIndex = 0;
+
+                // If empty, disable leave button ❌
                 if (playerList.length == 0) {
-                    row.components[1].setDisabled(true);
+                    leaveButton.setDisabled(true);
                 }
+                // Player who actually was in the lobby leaves
+                await i.update({
+                    content: getContent(playerList),
+                    components: [
+                        new discord.MessageActionRow().addComponents(
+                            joinButton,
+                            leaveButton
+                        ),
+                    ],
+                });
+            } else {
+                // If someone tries to leave a lobby they're not in, do nothing
+                await i.deferUpdate();
+            }
+        }
+    );
+
+    const cycleCollector = interaction.channel.createMessageComponentCollector({
+        filter: (i: discord.MessageComponentInteraction) =>
+            i.customId === prevTeamButtonUUID ||
+            i.customId === nextTeamButtonUUID,
+    });
+
+    cycleCollector.on(
+        'collect',
+        async (i: discord.MessageComponentInteraction) => {
+            let result: string;
+            if (i.customId === prevTeamButtonUUID) {
+                // Cycle backwards ⬅️
+                result =
+                    currentTeamsList[
+                        currentTeamsList.length -
+                            Math.abs(
+                                currentTeamsIndex-- % currentTeamsList.length
+                            ) -
+                            1
+                    ];
+            } else if (i.customId === nextTeamButtonUUID) {
+                // Cycle forwards ➡️
+                result =
+                    currentTeamsList[
+                        ++currentTeamsIndex % currentTeamsList.length
+                    ];
             }
             await i.update({
-                content: getContent(playerList),
-                components: [row],
+                content: result,
+                components: [
+                    new discord.MessageActionRow().addComponents(
+                        joinButton,
+                        leaveButton,
+                        prevTeamButton,
+                        nextTeamButton
+                    ),
+                ],
             });
         }
     );
 
     await interaction.reply({
         content: 'Lobby is currently **empty**!',
-        components: [row],
+        components: [
+            new discord.MessageActionRow().addComponents(
+                joinButton,
+                leaveButton
+            ),
+        ],
         embeds: [popFlashLinkEmbed],
     });
 
-    await setTimeout(async () => {
+    setTimeout(async () => {
         joinCollector.removeAllListeners();
         joinCollector.dispose(interaction);
         leaveCollector.removeAllListeners();
