@@ -11,7 +11,6 @@ import {
 } from '../util/csgoTeamMaking/getFairTeams';
 import _ from 'lodash';
 import { v4 as uuidv4 } from 'uuid';
-import { e } from 'mathjs';
 
 const popFlashLinkOption: SlashCommandStringOption =
     new SlashCommandStringOption()
@@ -53,7 +52,7 @@ const getMissingPlayerListMessage = function (
         .replace('[]', '')
         .split(',')
         .join(', ')}**`;
-    return `The following users could not be found in the database: ${listString}\n\n Add them with the \`\\add-csgo-player\` command, then re-join the lobby.`;
+    return `The following users could not be found in the database: ${listString}\n\n Add them with the \`/add-csgo-player\` command, then re-join the lobby.`;
 };
 
 // In seconds, currently at 1 hour.

@@ -1,7 +1,6 @@
 import { Routes } from 'discord-api-types/v9';
 import { REST } from '@discordjs/rest';
 import { Command, SlashCommandBuilderJSON } from '../discord';
-import { Permissions } from 'discord.js';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
@@ -9,7 +8,9 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 const clientId = process.env.CLIENT_ID;
-const guildId = process.env.ALT_GUILD_ID;
+
+// Used only for guild-specific deployment
+//const guildId = process.env.GUILD_ID;
 
 const rest = new REST({ version: '9' }).setToken(process.env.TOKEN);
 
@@ -33,7 +34,7 @@ async function compileCommandList(
 async function refreshCommands(commandList: SlashCommandBuilderJSON[]) {
     try {
         console.log('Started refreshing application slash commands...');
-        await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
+        await rest.put(Routes.applicationCommands(clientId), {
             body: commandList,
         });
         console.log('Success!');

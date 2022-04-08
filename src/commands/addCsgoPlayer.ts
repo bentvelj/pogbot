@@ -3,11 +3,8 @@ import {
     SlashCommandStringOption,
 } from '@discordjs/builders';
 import * as discord from 'discord.js';
-import * as mongoose from 'mongoose';
 import { Command } from '../../discord';
-import { connectDB } from '../db/mongoConnect';
 import { playerSchema as Player } from '../models/playerSchema';
-import { getADR } from '../util/csgoTeamMaking/getADR';
 import { getPlayerStats } from '../util/csgoTeamMaking/getPlayerStats';
 
 const discordIDOption: SlashCommandStringOption = new SlashCommandStringOption()
