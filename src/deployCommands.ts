@@ -10,7 +10,7 @@ dotenv.config();
 const clientId = process.env.CLIENT_ID;
 
 // Used only for guild-specific deployment
-const guildId = process.env.GUILD_ID;
+//const guildId = process.env.GUILD_ID;
 
 const rest = new REST({ version: '9' }).setToken(process.env.TOKEN);
 
@@ -38,10 +38,6 @@ async function refreshCommands(commandList: SlashCommandBuilderJSON[]) {
         await rest.put(Routes.applicationCommands(clientId), {
             body: commandList,
         });
-        // Temporary to clear server commands and avoid duplicates
-        await rest.put(Routes.applicationGuildCommands(clientId,guildId),{
-            body: []
-        })
         console.log('Success!');
     } catch (err) {
         console.log(err);
