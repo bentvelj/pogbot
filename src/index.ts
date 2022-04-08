@@ -26,7 +26,9 @@ const commandsDir = path.join(process.env.PWD, 'dist', 'src', 'commands');
 const commandFiles = fs.readdirSync(commandsDir);
 
 
-const guild = client.guilds.cache.get(process.env.GUILD_ID);
+client.guilds.fetch();
+
+const guild = client.guilds.cache.get(process.env.GUILD_ID)
 
 // This updates immediately
 guild.commands.set([]);
