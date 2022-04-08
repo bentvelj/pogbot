@@ -25,14 +25,6 @@ client.commands = new discord.Collection();
 const commandsDir = path.join(process.env.PWD, 'dist', 'src', 'commands');
 const commandFiles = fs.readdirSync(commandsDir);
 
-
-client.guilds.fetch();
-
-const guild = client.guilds.cache.get(process.env.GUILD_ID)
-
-// This updates immediately
-guild.commands.set([]);
-
 for (const file of commandFiles) {
     import(path.join(commandsDir, file))
         .then((command: Command) => {
