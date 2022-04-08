@@ -32,6 +32,7 @@ async function compileCommandList(
 }
 
 async function refreshCommands(commandList: SlashCommandBuilderJSON[]) {
+    
     try {
         console.log('Started refreshing application slash commands...');
         await rest.put(Routes.applicationCommands(clientId), {
